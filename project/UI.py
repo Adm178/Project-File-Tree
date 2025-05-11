@@ -84,10 +84,6 @@ class FileTreeEditor(ctk.CTk):
         self.collapse_all_button = ctk.CTkButton(self.expand_collapse_frame, text="Скрыть всё", command=self.OrganizerTree.collapse_all)
         self.collapse_all_button.grid(row=0, column=1, padx=5, sticky="n")
 
-        # Привязка события для выделения
-        self.tree.bind("<<TreeviewSelect>>", self.OrganizerTree.on_tree_select)
-        self.bind("<Escape>", self.OrganizerTree.on_escape)
-
         # Правая панель с редактором
         self.right_panel = ctk.CTkFrame(self)
         self.right_panel.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
@@ -121,7 +117,7 @@ class FileTreeEditor(ctk.CTk):
         self.button_frame.grid_columnconfigure(1, weight=0)  # центр
         self.button_frame.grid_columnconfigure(2, weight=1)  # правая
 
-        # Центровочный фрейм внутри, где все кнопки
+        # Центровочный фрейм, где внутри все кнопки
         self.center_buttons_frame = ctk.CTkFrame(self.button_frame, fg_color="transparent")
         self.center_buttons_frame.grid(row=0, column=1)  # по центру
 
@@ -140,11 +136,10 @@ class FileTreeEditor(ctk.CTk):
         self.load_button = ctk.CTkButton(self.center_buttons_frame, text="Загрузить проект", command=self.OrganizerProject.open_project)
         self.load_button.grid(row=0, column=5, padx=5, pady=5)
 
-        # Новый интерфейс для связей
+        # Интерфейс для связных файлов
         self.links_label = ctk.CTkLabel(self.right_panel, text="Связанные файлы:")
         self.links_label.grid(row=2, column=0, sticky="w", padx=5, pady=5)
 
-        # Используем обычный Listbox для отображения связей
         self.links_listbox = tk.Listbox(self.right_panel, height=1)
         self.links_listbox.grid(row=3, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
         self.links_listbox.bind("<Double-1>", self.OrganizerRelatedFiles.open_link)
@@ -152,7 +147,6 @@ class FileTreeEditor(ctk.CTk):
 
         self.link_menu = tk.Menu(self.links_listbox, tearoff=0)
         self.link_menu.add_command(label="Открыть в проводнике", command=self.OrganizerRelatedFiles.open_in_explorer)
-
 
         self.add_link_button = ctk.CTkButton(self.right_panel, text="Добавить связанный файл", command=self.OrganizerRelatedFiles.add_link)
         self.add_link_button.grid(row=4, column=0, padx=5, pady=5, sticky="ew")
@@ -175,7 +169,6 @@ class FileTreeEditor(ctk.CTk):
         self.bold_var = tk.BooleanVar()
         self.strike_var = tk.BooleanVar()
         self.faded_var = tk.BooleanVar()
-        self.apply_to_children_var = tk.BooleanVar()
 
         self.bold_check = ctk.CTkCheckBox(self.state_options_frame, text="Жирный", variable=self.bold_var, command=self.Other.update_format)
         self.bold_check.grid(row=0, column=0, sticky="w", padx=5)
@@ -186,27 +179,23 @@ class FileTreeEditor(ctk.CTk):
         self.faded_check = ctk.CTkCheckBox(self.state_options_frame, text="Блеклый", variable=self.faded_var, command=self.Other.update_format)
         self.faded_check.grid(row=2, column=0, sticky="w", padx=5)
 
-        self.apply_to_children_check = ctk.CTkCheckBox(
-            self.state_options_frame, 
-            text="Применить ко всем дочерним", 
-            variable=self.apply_to_children_var,
-            command=self.Other.update_format
+        self.apply_to_children_button = ctk.CTkButton(
+            self.state_options_frame,
+            text="Применить ко всем дочерним",
+            command=self.Other.apply_format_to_all_children
         )
-        self.apply_to_children_check.grid(row=1, column=1, rowspan=3, sticky="n", padx=5)
+        self.apply_to_children_button.grid(row=1, column=1, rowspan=3, sticky="n", padx=5)
 
         #-------------------------------------------------------------------------------------
-        # Инициализация данных
+        # Сохранение текущего состояния дерева
+        self.tree_structure = {}
         self.descriptions = {}
         self.icons = {}
         self.file_links = {}
         self.last_selected_item = None
 
+        # Сохранение состояние стилей для каждого элемента
         self.format_states = {}
-
-        self.bold_flags = {}
-        self.strike_flags = {}
-        self.faded_flags = {}
-        self.apply_to_all_flags = {}
 
         # Обработка кликов по дереву (снятие выделения)
         self.tree.bind("<Button-3>", self.OrganizerTree.on_click_tree, add="+")
@@ -219,6 +208,10 @@ class FileTreeEditor(ctk.CTk):
         self.tree.bind("<ButtonRelease-1>", self.DragAndDrop.end_drag)
         self.tree.bind("<Delete>", self.OrganizerTree.delete_item)
 
+        # Привязка события для выделения
+        self.tree.bind("<<TreeviewSelect>>", self.OrganizerTree.on_tree_select)
+        self.bind("<Escape>", self.OrganizerTree.on_escape)
+
         # Ctrl+A для выделения всех элементов дерева
         self.tree.bind("<Control-a>", self.OrganizerTree.select_all_items)
         self.tree.bind("<Control-A>", self.OrganizerTree.select_all_items)
@@ -229,6 +222,4 @@ class FileTreeEditor(ctk.CTk):
         self.bind("<Control-f>", lambda event: self.search_entry.focus_set())
         self.bind("<Control-F>", lambda event: self.search_entry.focus_set())
 
-        # Сохранение текущего состояния дерева
-        self.tree_structure = {}
 

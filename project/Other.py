@@ -30,34 +30,39 @@ class Other:
 
         tag_name = f"tag_{item}"
 
-        state = {
-        "bold": self.ui.bold_var.get(),
-        "strike": self.ui.strike_var.get(),
-        "faded": self.ui.faded_var.get(),
-        }
-        self.ui.format_states[item] = state  # Сохраняем состояние
+        state = self.ui.format_states.setdefault(item, {})
+        state["bold"] = self.ui.bold_var.get()
+        state["strike"] = self.ui.strike_var.get()
+        state["faded"] = self.ui.faded_var.get()
 
-        # Формируем стиль
         font_mods = []
-        if self.ui.bold_var.get():
+        if state["bold"]:
             font_mods.append("bold")
-        if self.ui.strike_var.get():
+        if state["strike"]:
             font_mods.append("overstrike")
 
         font_style = " ".join(font_mods) if font_mods else "normal"
-        fg_color = "#888888" if self.ui.faded_var.get() else "#000000"
+        fg_color = "#888888" if state["faded"] else "#000000"
 
         self.ui.tree.tag_configure(tag_name, font=(self.font, self.fontSize, font_style), foreground=fg_color)
         self.ui.tree.item(item, tags=(tag_name,))
 
-        if self.ui.apply_to_children_var.get():
-            self.apply_style_to_children(item, font_style, fg_color)
+    def apply_style_to_children(self, parent_item, font_style, fg_color):
+        children = self.ui.tree.get_children(parent_item)
 
-    def apply_style_to_children(self, item, font_style, fg_color):
-        for child in self.ui.tree.get_children(item):
+        for child in children:
+            # Обновляем формат в format_states
+            state = self.ui.format_states.setdefault(child, {})
+            state["bold"] = "bold" in font_style
+            state["strike"] = "overstrike" in font_style
+            state["faded"] = fg_color == "#888888"
+
+            # Применяем визуальный стиль
             tag_name = f"tag_{child}"
             self.ui.tree.tag_configure(tag_name, font=(self.font, self.fontSize, font_style), foreground=fg_color)
             self.ui.tree.item(child, tags=(tag_name,))
+
+            # Рекурсивно применяем к вложенным
             self.apply_style_to_children(child, font_style, fg_color)
 
     def update_format_for(self, item_id):
@@ -76,11 +81,35 @@ class Other:
     def apply_item_styles(self, item_id):
         tags = []
 
-        if self.ui.bold_flags.get(item_id):
+        fmt = self.ui.format_states.get(item_id, {})
+        if fmt.get("bold"):
             tags.append("bold")
-        if self.ui.strike_flags.get(item_id):
+        if fmt.get("strike"):
             tags.append("strike")
-        if self.ui.faded_flags.get(item_id):
+        if fmt.get("faded"):
             tags.append("faded")
 
         self.ui.tree.item(item_id, tags=tags)
+    
+    def update_checkboxes_from_format(self, item_id):
+        format_data = self.format_states.get(item_id, {})
+        
+        self.bold_checkbox_var.set(format_data.get("bold", False))
+        self.strike_checkbox_var.set(format_data.get("strike", False))
+        self.faded_checkbox_var.set(format_data.get("faded", False))
+
+    def apply_format_to_all_children(self):
+        item = self.ui.tree.focus()
+        if not item:
+            return
+
+        state = self.ui.format_states.get(item, {})
+        font_mods = []
+        if state.get("bold"):
+            font_mods.append("bold")
+        if state.get("strike"):
+            font_mods.append("overstrike")
+        font_style = " ".join(font_mods) if font_mods else "normal"
+        fg_color = "#888888" if state.get("faded") else "#000000"
+
+        self.apply_style_to_children(item, font_style, fg_color)

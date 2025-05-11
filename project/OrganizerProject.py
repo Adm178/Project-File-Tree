@@ -39,10 +39,9 @@ class OrganizerProject:
                 "description": self.ui.descriptions.get(item, ""),
                 "type": self.ui.icons.get(item, "file"),
                 "links": self.ui.file_links.get(item, []),
-                "bold": self.ui.bold_flags.get(item, False),
-                "strike": self.ui.strike_flags.get(item, False),
-                "faded": self.ui.faded_flags.get(item, False),
-                "apply_to_all": self.ui.apply_to_all_flags.get(item, False),
+                "bold": self.ui.format_states.get(item, {}).get("bold", False),
+                "strike": self.ui.format_states.get(item, {}).get("strike", False),
+                "faded": self.ui.format_states.get(item, {}).get("faded", False),
                 "children": self.build_tree_dict(item)
             }
             tree_dict.append(item_dict)
@@ -81,11 +80,11 @@ class OrganizerProject:
             self.ui.descriptions[new_item] = item["description"]
             self.ui.icons[new_item] = item["type"]
             self.ui.file_links[new_item] = item.get("links", [])  # Восстанавливаем связи
-            self.ui.bold_flags[new_item] = item.get("bold", False)
-            self.ui.strike_flags[new_item] = item.get("strike", False)
-            self.ui.faded_flags[new_item] = item.get("faded", False)
-            self.ui.apply_to_all_flags[new_item] = item.get("apply_to_all", False)
-
+            self.ui.format_states[new_item] = {
+                "bold": item.get("bold", False),
+                "strike": item.get("strike", False),
+                "faded": item.get("faded", False),
+            }
             self.ui.tree_structure[new_item] = (parent, item["name"])
 
             self.Other.apply_item_styles(new_item)
