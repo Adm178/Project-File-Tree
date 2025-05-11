@@ -13,8 +13,6 @@ class OrganizerTree:
     def add_file(self):
         selected_item = self.ui.tree.focus()
         parent = selected_item if selected_item else ""
-
-        self.ui.tree.tag_configure("custom", font=("Segoe UI", self.fontSize), foreground="#000000")
         new_item = self.ui.tree.insert(parent, "end", text="Новый файл", image=self.ui.file_icon)
         tag_name = f"tag_{new_item}" # Уникальный тег для файла
         self.ui.tree.item(new_item, tags=(tag_name,))
@@ -31,7 +29,6 @@ class OrganizerTree:
     def add_folder(self):
         selected_item = self.ui.tree.focus()
         parent = selected_item if selected_item else ""
-        self.ui.tree.tag_configure("custom", font=("Segoe UI", self.fontSize), foreground="#000000")
         new_item = self.ui.tree.insert(parent, "end", text="Новая папка", image=self.ui.folder_icon)
         tag_name = f"tag_{new_item}" # Уникальный тег для папки
         self.ui.tree.item(new_item, tags=(tag_name,))

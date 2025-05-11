@@ -65,38 +65,13 @@ class Other:
             # Рекурсивно применяем к вложенным
             self.apply_style_to_children(child, font_style, fg_color)
 
-    def update_format_for(self, item_id):
-        style = self.ui.format_states.get(item_id, {})
-        tags = []
-
-        if style.get("bold"):
-            tags.append("bold")
-        if style.get("strike"):
-            tags.append("strike")
-        if style.get("faded"):
-            tags.append("faded")
-
-        self.ui.tree.item(item_id, tags=tuple(tags))
-
     def apply_item_styles(self, item_id):
-        tags = []
-
         fmt = self.ui.format_states.get(item_id, {})
-        if fmt.get("bold"):
-            tags.append("bold")
-        if fmt.get("strike"):
-            tags.append("strike")
-        if fmt.get("faded"):
-            tags.append("faded")
+        font_style, fg_color = self.get_item_style(fmt)
 
-        self.ui.tree.item(item_id, tags=tags)
-    
-    def update_checkboxes_from_format(self, item_id):
-        format_data = self.format_states.get(item_id, {})
-        
-        self.bold_checkbox_var.set(format_data.get("bold", False))
-        self.strike_checkbox_var.set(format_data.get("strike", False))
-        self.faded_checkbox_var.set(format_data.get("faded", False))
+        tag_name = f"tag_{item_id}"
+        self.ui.tree.tag_configure(tag_name, font=(self.font, self.fontSize, font_style), foreground=fg_color)
+        self.ui.tree.item(item_id, tags=(tag_name,))
 
     def apply_format_to_all_children(self):
         item = self.ui.tree.focus()
@@ -104,6 +79,12 @@ class Other:
             return
 
         state = self.ui.format_states.get(item, {})
+        font_style, fg_color = self.get_item_style(state)
+
+        self.apply_style_to_children(item, font_style, fg_color)
+
+
+    def get_item_style(self, state):
         font_mods = []
         if state.get("bold"):
             font_mods.append("bold")
@@ -111,5 +92,11 @@ class Other:
             font_mods.append("overstrike")
         font_style = " ".join(font_mods) if font_mods else "normal"
         fg_color = "#888888" if state.get("faded") else "#000000"
-
-        self.apply_style_to_children(item, font_style, fg_color)
+        return font_style, fg_color
+    
+    def update_checkboxes_from_format(self, item_id):
+        format_data = self.format_states.get(item_id, {})
+        
+        self.bold_checkbox_var.set(format_data.get("bold", False))
+        self.strike_checkbox_var.set(format_data.get("strike", False))
+        self.faded_checkbox_var.set(format_data.get("faded", False))

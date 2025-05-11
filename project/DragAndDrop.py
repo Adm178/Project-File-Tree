@@ -34,11 +34,17 @@ class DragAndDrop:
         
         # Снимаем старую подсветку
         if self.ui.prev_highlighted:
-            self.ui.tree.item(self.ui.prev_highlighted, tags=())
+            existing_tags = list(self.ui.tree.item(self.ui.prev_highlighted, "tags"))
+            if "highlighted" in existing_tags:
+                existing_tags.remove("highlighted")
+            self.ui.tree.item(self.ui.prev_highlighted, tags=tuple(existing_tags))
 
         # Подсвечиваем новый элемент
         if target_item:
-            self.ui.tree.item(target_item, tags=("highlighted",))
+            existing_tags = list(self.ui.tree.item(target_item, "tags"))
+            if "highlighted" not in existing_tags:
+                existing_tags.append("highlighted")
+            self.ui.tree.item(target_item, tags=tuple(existing_tags))
             self.ui.prev_highlighted = target_item
 
     # Автоматически раскрывает папку под курсором при наведении во время перетаскивания
@@ -88,9 +94,12 @@ class DragAndDrop:
 
         # Снимаем подсветку
         if self.ui.prev_highlighted:
-            self.ui.tree.item(self.ui.prev_highlighted, tags=())
+            existing_tags = list(self.ui.tree.item(self.ui.prev_highlighted, "tags"))
+            if "highlighted" in existing_tags:
+                existing_tags.remove("highlighted")
+            self.ui.tree.item(self.ui.prev_highlighted, tags=tuple(existing_tags))
 
         if self.dragging_item in self.ui.format_states:
-            self.Other.update_format_for(self.dragging_item)
+            self.Other.apply_item_styles(self.dragging_item)
 
         self.dragging_item = None
